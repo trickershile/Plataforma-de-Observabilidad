@@ -1,87 +1,115 @@
+#  Plataforma Inteligente de Observabilidad IoT (POIA-IoT)
 
-# Plataforma de Observabilidad e IA para IoT Industrial (POIA-IoT)
 
-POIA-IoT es una plataforma de observabilidad a nivel de **Data Lakehouse** orientada a la ingesta masiva, limpieza automatizada transaccional (ACID) y modelado predictivo de telemetría proveniente de activos industriales críticos. Utiliza un algoritmo no supervisado (*Isolation Forest*) para aislar desviaciones térmicas y de vibración en tiempo real, notificando automáticamente fallas críticas a los ingenieros de planta.
+Bienvenido a la **Plataforma POIA-IoT**. Este sistema automatizado recolecta los datos de los sensores de maquinaria pesada de la planta y utiliza Inteligencia Artificial (*Isolation Forest*) para **predecir y aislar fallas mecánicas antes de que ocurran**, previniendo detenciones críticas de producción.
+
+**No necesitas saber programar ni escribir código para usarla.** Toda la ingeniería compleja corre en el fondo de forma transparente y tú interactúas con una interfaz visual amigable desde tu navegador web.
 
 ---
-
 
 ##  Arquitectura y Flujo de Datos (Patrón Medallion)
 
-La plataforma procesa ráfagas continuas de datos a través de una arquitectura multi-capa optimizada:
+El sistema opera de forma automática simulando el recorrido de los materiales en una fábrica física, organizando la información en tres etapas protegidas:
 
-1. **Capa Bronze (Ingesta Cruda):** El simulador de sensores genera archivos JSON inmutables con lecturas de temperatura, voltaje y vibración en `lakehouse/bronze/`.
-2. **Capa Silver (Limpieza Transaccional):** Apache Spark de-duplica marcas de tiempo y aplica funciones de ventana analíticas para imputar valores nulos de forma inteligente, persistiendo los datos con tolerancia a fallos en formato **Delta Lake** (`lakehouse/silver/`).
-3. **Capa Gold (Features e IA):** Se consolida la ingeniería de características en formato Parquet (`lakehouse/gold/`) donde el modelo entrenado segmenta y etiqueta las anomalías mecánicas.
+1. **Capa Bronze (Ingesta Cruda):** Recibe las ráfagas directamente de las máquinas y guarda los archivos JSON inmutables en `lakehouse/bronze/`.
+2. **Capa Silver (Filtro Limpiador):** El motor Apache Spark borra datos repetidos y rellena de forma automática los valores perdidos o nulos. Toda la información queda resguardada bajo la seguridad de una tabla **Delta Lake** (`lakehouse/silver/`).
+3. **Capa Gold (Cerebro IA):** Extrae las métricas analíticas calculadas en formato Parquet (`lakehouse/gold/`), donde el algoritmo de Inteligencia Artificial evalúa y etiqueta si las variaciones de temperatura o vibración corresponden a una falla real.
 
 ---
+
 ## 📁 Estructura del Repositorio (Organización del Proyecto)
 
-Para mantener el orden de la planta digital, los archivos están organizados en carpetas separadas según su función. No debes mezclar los archivos; cada uno tiene su lugar asignado:
+Para mantener el orden de la planta digital, los archivos están estrictamente clasificados en carpetas independientes. **No debes mover los archivos de su lugar asignado**, ya que el sistema operativo depende de este orden para no fallar:
+
 ```text
 📁 Plataforma-Observabilidad-IoT/  <-- Carpeta principal del proyecto
 │
-├── 📄 docker-compose.yml         # El "botón de encendido" que levanta todo el sistema.
+├── 📄 docker-compose.yml         # El "botón de encendido" que levanta toda la planta digital.
 ├── 📄 README.md                  # Este manual de instrucciones que estás leyendo.
 │
-├── 📁 notebooks/                 # [CEREBRO DEL PROGRAMA] Carpeta con los códigos y pantallas
+├── 📁 notebooks/                 # [CEREBRO ANALÍTICO] Códigos de control y pantallas visuales
 │   ├── 📄 orquestador_planta.py  # El piloto automático: corre los procesos en orden y envía alertas.
-│   ├── 📄 pipeline_silver.ipynb  # El filtro limpiador: corrige los errores de los sensores.
-│   ├── 📄 pipeline_gold.ipynb    # El calculador: genera las métricas avanzadas para la IA.
-│   └── 📄 app_dashboard.py       # La interfaz web: la pantalla visual con gráficos que tú usas.
+│   ├── 📄 pipeline_silver.ipynb  # El filtro limpiador: corrige errores de sensores en Apache Spark.
+│   ├── 📄 pipeline_gold.ipynb    # El calculador: genera las métricas y características para la IA.
+│   └── 📄 app_dashboard.py       # La interfaz web: la pantalla visual interactiva que tú utilizas.
 │
-└── 📁 lakehouse/                 # [ALMACÉN DE DATOS] Carpeta central donde se guardan las bases de datos
-    ├── 📁 bronze/                # Capa Cruda: Guarda los archivos JSON exactamente como llegan de las máquinas.
-    ├── 📁 silver/                # Capa Limpia: Guarda los datos corregidos por Spark sin errores ni duplicados.
-    └── 📁 gold/                  # Capa Predicciones: Guarda los datos finales listos para el uso de la IA.
+└── 📁 lakehouse/                 # [ALMACÉN DE DATOS] Repositorios centrales de información (Bases de datos)
+    ├── 📁 bronze/                # Datos Crudos: Guarda los archivos JSON exactamente como llegan de las máquinas.
+    ├── 📁 silver/                # Datos Limpios: Almacenamiento Delta Lake corregido y libre de duplicados.
+    └── 📁 gold/                  # Características: Tabla Parquet optimizada para las predicciones de la IA.
 ```
----
-##  Estrategia de KPIs DataOps Implementados
-La salud operativa del pipeline y la confianza del modelo de Inteligencia Artificial se auditan programáticamente mediante 4 métricas clave:
+## Guía de Encendido Rápido en 3 Pasos
+Requisito Único: Tener Docker Encendido
+Asegúrate de tener instalado y abierto el programa gratuito Docker Desktop en tu computadora. Si no lo tienes, puedes descargarlo de forma común desde su página oficial.
 
-DER (Tasa de Error de Datos): Porcentaje de JSONs corruptos o nulos recibidos. Umbral crítico: < 1.5%.
+## Paso 1: Entrar a la Carpeta desde la Terminal
+Abre la consola de comandos de tu sistema (en Windows busca "CMD" o "Símbolo del Sistema"; en Mac busca "Terminal"). Escribe cd seguido de un espacio, arrastra la carpeta descompresa del proyecto dentro de la ventana negra y presiona Enter. Ejemplo:
 
-PL (Latencia del Pipeline): Tiempo físico de procesamiento extremo a extremo. Umbral óptimo: < 5 segundos.
 
-DCR (Tasa de Completitud): Éxito de la restauración matemática de nulos en Spark. Objetivo: ≥ 99.8%.
+cd Escritorio/Plataforma-Observabilidad-IoT
 
-Score F1 (Rendimiento de IA): Balance de precisión del algoritmo Isolation Forest. Umbral aprobado: > 85%.
-
-##  Guía de Instalación y Despliegue Local
-Requisitos Previos
-Tener instalado Docker y Docker Compose.
-
-Conexión a internet (para la descarga inicial de las imágenes contenerizadas).
-
-## Paso 1: Levantar la Infraestructura Aislada
-Clona el repositorio en tu máquina local, navega hasta la raíz del proyecto y ejecuta el entorno contenerizado en segundo plano:
-
+## Paso 2: Encender la Plataforma
+Para descargar, configurar e inicializar de forma aislada las bases de datos, los motores de Spark y la pantalla web con un solo clic virtual, ejecuta el siguiente comando:
 
 docker-compose up -d
-Este comando descargará e inicializará el stack tecnológico, configurando los entornos de Apache Spark, Delta Lake, Jupyter Lab y la interfaz web sin generar conflictos con tus librerías locales.
+El sistema levantará el stack tecnológico completo en segundo plano sin generar conflictos con tus programas locales.
 
-## Paso 2: Ejecución del Orquestador Automático
-El contenedor ejecuta automáticamente el script orquestador_planta.py al iniciar. Si deseas forzar un nuevo ciclo de captura, limpieza e inferencia de la IA de forma manual, corre:
+## Paso 3: Abrir tus Pantallas de Control
+Abre tu navegador web (Google Chrome, Edge o Safari) e ingresa a las siguientes direcciones:
+
+##  Panel de Control e IA (Streamlit): Ingresa a http://localhost:8501. Esta es tu pantalla de trabajo diaria donde monitoreas el estado de la planta.
+
+ Monitor Técnico de Spark UI: Ingresa a http://localhost:4040 solo si deseas auditar los procesos de cómputo distribuidos.
+
+📝 Entorno de Desarrollo (Jupyter Lab): Ingresa a http://localhost:8888 en caso de requerir inspeccionar los bloques de código directamente.
+
+##  ¿Cómo interpretar las Pantallas de Control? (Métricas DataOps)
+Al ingresar al Panel de Control (http://localhost:8501), verás una interfaz dividida en dos pestañas principales:
+
+## Pestaña 1: Monitoreo de Operaciones (Para Jefes de Planta)
+Mediciones Totales: Muestra cuántos registros han enviado los sensores en el turno actual.
+
+Alertas Críticas de IA: Indica cuántas veces la Inteligencia Artificial detectó anomalías mecánicas peligrosas.
+
+Estado de la Maquinaria: Letrero de seguridad. Si está en VERDE (Operación Estable) todo marcha bien. Si cambia a ROJO (Crítico / Mantenimiento), la IA detectó fallas activas y debes revisar los equipos.
+
+Análisis de Tendencia: Gráfico interactivo en tiempo real. Si la IA detecta una falla, marcará automáticamente un punto con una "X" de color rojo en la línea de tiempo.
+
+## Pestaña 2: Gobierno de Datos y KPIs (Para Auditores Técnicos)
+DER (Tasa de Error de Datos): Mide la cantidad de mensajes corruptos que envían los sensores. Debe mantenerse por debajo del < 1.5%. Si se supera, el sistema registra la anomalía en el archivo alertas.log.
+
+PL (Latencia del Pipeline): Indica en segundos cuánto tarda un dato desde que sale de la máquina hasta que se visualiza en la pantalla web. El umbral óptimo de la planta es < 5 segundos.
+
+DCR (Tasa de Completitud): Porcentaje de registros rellenados exitosamente por Spark. Objetivo: ≥ 99.8%.
+
+Score F1 (Salud de la IA): Precisión del algoritmo. Un valor superior a 0.85 confirma que la IA está bien calibrada y libre de falsas alarmas.
+
+##  Privacidad, Gobernanza y Ley N° 19.628 (Chile)
+Aunque el sistema procesa telemetría técnica de máquinas, las bitácoras registran de forma colateral el identificador del operador en turno (operador_id) para asegurar la trazabilidad de las reparaciones. Para cumplir estrictamente con la Ley N° 19.628 de Protección de la Vida Privada en Chile, el sistema implementa:
+
+Minimización: No se almacenan nombres, RUT, correos ni datos sensibles de personas en ninguna capa del Lakehouse.
+
+Seudonimización: Los códigos de los ingenieros se encriptan de forma matemática irreversible (Hash SHA-256) al ingresar a la capa Silver, impidiendo identificar a los trabajadores en caso de una filtración.
+
+Acceso Seguro (Supervisión Humana): Bajo los lineamientos de la Ley de IA de la Unión Europea (EU AI Act) para sistemas de alto riesgo, la consola interactiva web está separada del motor de código para asegurar un control y supervisión humana transparente sin riesgos operativos.
+
+##  Plan de Escalabilidad y Mejoras Futuras
+El sistema cuenta con una ruta de desarrollo realista estructurada en tres fases para pasar de este prototipo local a un entorno corporativo de alta disponibilidad:
+
+Fase 1: Piloto Automático Avanzado (Apache Airflow): Se sustituirá la orquestación síncrona manual por un programador empresarial para automatizar los flujos de re-entrenamientos de la IA y reintentos ante caídas de red.
+
+Fase 2: Monitoreo con Gráficos de Alta Fidelidad (Grafana): Las métricas de latencia de kpis_infra.txt se conectarán a paneles interactivos en Grafana con alertas sonoras en vivo para el equipo de soporte técnico de TI.
+
+Fase 3: Análisis Instantáneo en Milisegundos (Apache Kafka): Se migrará el procesamiento por lotes hacia un bus de eventos en streaming. Esto reducirá la latencia operativa a milisegundos, aislando impactos mecánicos dañinos de forma inmediata al momento de ocurrir.
+
+##  ¿Cómo apagar el sistema de forma segura?
+Cuando termine tu turno o desees apagar el monitoreo, vuelve a la ventana de la consola (CMD / Terminal) y presiona las teclas Control + C para liberar la línea de comandos. Luego, escribe la siguiente instrucción:
 
 
-docker exec -it spark_delta_lakehouse python /home/jovyan/work/notebooks/orquestador_planta.py
-El orquestador registrará los tiempos del pipeline (KPI PL), actualizará las bitácoras de calidad (KPI DER) y disparará un Webhook directo a Discord si localiza fallas mecánicas.
+docker-compose down
+Este comando apagará todos los procesos de forma limpia y liberará por completo la memoria RAM de tu computadora. No perderás información: todo el histórico acumulado de la planta quedará guardado de forma segura dentro de tu carpeta lakehouse/ para el día siguiente.
 
-
-## Paso 3: Acceder a las Interfaces de Control
-Una vez levantado el contenedor, puedes interactuar con el sistema a través de tu navegador web:
-
-Panel de Control Global (Streamlit): Accede a http://localhost:8501 para visualizar gráficos interactivos en tiempo real, tablas de auditoría y la pestaña de Gobierno de Datos con todas las métricas DataOps.
-
-IDE de Ingeniería (Jupyter Lab): Accede a http://localhost:8888 para explorar y modificar el código de los notebooks directamente.
-
-Consola de Spark (Spark UI): Monitoriza el rendimiento de los grafos acíclicos directos (DAGs) de tus consultas distribuidas en http://localhost:4040.
-
-##  Seguridad, Gobierno y Cumplimiento (EU AI Act)
-Trazabilidad Histórica: Gracias al Transaction Log de la arquitectura Delta Lake, cualquier ingeniero de la planta puede realizar consultas retrospectivas (VERSION AS OF), garantizando auditoría completa del linaje de datos.
-
-Cumplimiento Regulatorio: Al actuar sobre infraestructura industrial crítica, este sistema ha sido diseñado bajo los lineamientos para Sistemas de IA de Alto Riesgo de la Ley de Inteligencia Artificial de la Unión Europea, implementando bitácoras de calidad automatizadas y un panel web explícito para la supervisión humana directa.
-
+Plataforma POIA-IoT — Democratizando la IA Industrial. Desarrollado por Víctor Manuel Garay Soto — Sección 002D — Duoc UC.
 Desarrollado con fines académicos y de producción bajo estándares de MLOps y DataOps. Autor: Víctor Manuel Garay Soto — Duoc UC
 
 Diseñado para democratizar la Inteligencia Artificial industrial. Desarrollado por Víctor Manuel Garay Soto — Duoc UC. Para soporte técnico, contactar al administrador del sistema.
