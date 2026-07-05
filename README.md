@@ -21,15 +21,25 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
 
 📁 Plataforma-Observabilidad-IoT/
 ├── 📄 docker-compose.yml         # Infraestructura como Código (IaC) de la plataforma
+
 ├── 📄 README.md                  # Documentación principal del sistema
+
 ├── 📁 notebooks/                 # Scripts de orquestación, procesamiento y visualización
+
 │   ├── 📄 orquestador_planta.py  # Centralizador secuencial del flujo de datos y alertas
+
 │   ├── 📄 pipeline_silver.ipynb  # ETL transaccional y cálculo de KPIs en PySpark
+
 │   ├── 📄 pipeline_gold.ipynb    # Agregación temporal e ingeniería de características
+
 │   └── 📄 app_dashboard.py       # Frontend interactivo unificado en Streamlit
+
 └── 📁 lakehouse/                 # Volúmenes locales persistentes del Lakehouse
+
     ├── 📁 bronze/                # Repositorio inmutable de telemetría cruda (.json)
+    
     ├── 📁 silver/                # Tabla Delta Lake optimizada (telemetry_clean)
+    
     └── 📁 gold/                  # Características y predicciones listas para la IA
 
     
