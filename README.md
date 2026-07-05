@@ -1,4 +1,4 @@
-```text
+
 # Plataforma de Observabilidad e IA para IoT Industrial (POIA-IoT)
 
 POIA-IoT es una plataforma de observabilidad a nivel de **Data Lakehouse** orientada a la ingesta masiva, limpieza automatizada transaccional (ACID) y modelado predictivo de telemetría proveniente de activos industriales críticos. Utiliza un algoritmo no supervisado (*Isolation Forest*) para aislar desviaciones térmicas y de vibración en tiempo real, notificando automáticamente fallas críticas a los ingenieros de planta.
@@ -18,7 +18,6 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
 ## 📁 Estructura del Repositorio (Organización del Proyecto)
 
 Para mantener el orden de la planta digital, los archivos están organizados en carpetas separadas según su función. No debes mezclar los archivos; cada uno tiene su lugar asignado:
-
 ```text
 📁 Plataforma-Observabilidad-IoT/  <-- Carpeta principal del proyecto
 │
@@ -35,7 +34,7 @@ Para mantener el orden de la planta digital, los archivos están organizados en 
     ├── 📁 bronze/                # Capa Cruda: Guarda los archivos JSON exactamente como llegan de las máquinas.
     ├── 📁 silver/                # Capa Limpia: Guarda los datos corregidos por Spark sin errores ni duplicados.
     └── 📁 gold/                  # Capa Predicciones: Guarda los datos finales listos para el uso de la IA.
-
+```
 ---
 ##  Estrategia de KPIs DataOps Implementados
 La salud operativa del pipeline y la confianza del modelo de Inteligencia Artificial se auditan programáticamente mediante 4 métricas clave:
