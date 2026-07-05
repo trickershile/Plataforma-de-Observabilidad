@@ -14,26 +14,28 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
 3. **Capa Gold (Features e IA):** Se consolida la ingeniería de características en formato Parquet (`lakehouse/gold/`) donde el modelo entrenado segmenta y etiqueta las anomalías mecánicas.
 
 ---
+## 📁 Estructura del Repositorio (Organización del Proyecto)
 
-##  Estructura del Repositorio
+Para mantener el orden de la planta digital, los archivos están organizados en carpetas separadas según su función. No debes mezclar los archivos; cada uno tiene su lugar asignado:
 
+```text
+📁 Plataforma-Observabilidad-IoT/  <-- Carpeta principal del proyecto
+│
+├── 📄 docker-compose.yml         # El "botón de encendido" que levanta todo el sistema.
+├── 📄 README.md                  # Este manual de instrucciones que estás leyendo.
+│
+├── 📁 notebooks/                 # [CEREBRO DEL PROGRAMA] Carpeta con los códigos y pantallas
+│   ├── 📄 orquestador_planta.py  # El piloto automático: corre los procesos en orden y envía alertas.
+│   ├── 📄 pipeline_silver.ipynb  # El filtro limpiador: corrige los errores de los sensores.
+│   ├── 📄 pipeline_gold.ipynb    # El calculador: genera las métricas avanzadas para la IA.
+│   └── 📄 app_dashboard.py       # La interfaz web: la pantalla visual con gráficos que tú usas.
+│
+└── 📁 lakehouse/                 # [ALMACÉN DE DATOS] Carpeta central donde se guardan las bases de datos
+    ├── 📁 bronze/                # Capa Cruda: Guarda los archivos JSON exactamente como llegan de las máquinas.
+    ├── 📁 silver/                # Capa Limpia: Guarda los datos corregidos por Spark sin errores ni duplicados.
+    └── 📁 gold/                  # Capa Predicciones: Guarda los datos finales listos para el uso de la IA.
 
-
-📁 Plataforma-Observabilidad-IoT/
-
-├── 📄 docker-compose.yml         # Infraestructura como Código (IaC) de la plataforma
-├── 📄 README.md                  # Documentación principal del sistema
-├── 📁 notebooks/                 # Scripts de orquestación, procesamiento y visualización
-│   ├── 📄 orquestador_planta.py  # Centralizador secuencial del flujo de datos y alertas
-│   ├── 📄 pipeline_silver.ipynb  # ETL transaccional y cálculo de KPIs en PySpark
-│   ├── 📄 pipeline_gold.ipynb    # Agregación temporal e ingeniería de características
-│   └── 📄 app_dashboard.py       # Frontend interactivo unificado en Streamlit
-└── 📁 lakehouse/                 # Volúmenes locales persistentes del Lakehouse
-    ├── 📁 bronze/                # Repositorio inmutable de telemetría cruda (.json)
-    ├── 📁 silver/                # Tabla Delta Lake optimizada (telemetry_clean)
-    └── 📁 gold/                  # Características y predicciones listas para la IA
-
-    
+---
 ##  Estrategia de KPIs DataOps Implementados
 La salud operativa del pipeline y la confianza del modelo de Inteligencia Artificial se auditan programáticamente mediante 4 métricas clave:
 
