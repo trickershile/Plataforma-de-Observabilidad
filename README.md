@@ -18,6 +18,7 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
 ##  Estructura del Repositorio
 
 
+
 📁 Plataforma-Observabilidad-IoT/
 ├── 📄 docker-compose.yml         # Infraestructura como Código (IaC) de la plataforma
 ├── 📄 README.md                  # Documentación principal del sistema
@@ -30,6 +31,8 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
     ├── 📁 bronze/                # Repositorio inmutable de telemetría cruda (.json)
     ├── 📁 silver/                # Tabla Delta Lake optimizada (telemetry_clean)
     └── 📁 gold/                  # Características y predicciones listas para la IA
+
+    
 ##  Estrategia de KPIs DataOps Implementados
 La salud operativa del pipeline y la confianza del modelo de Inteligencia Artificial se auditan programáticamente mediante 4 métricas clave:
 
