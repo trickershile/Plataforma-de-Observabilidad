@@ -5,7 +5,7 @@ POIA-IoT es una plataforma de observabilidad a nivel de **Data Lakehouse** orien
 ---
 
 
-## 🛠️ Arquitectura y Flujo de Datos (Patrón Medallion)
+##  Arquitectura y Flujo de Datos (Patrón Medallion)
 
 La plataforma procesa ráfagas continuas de datos a través de una arquitectura multi-capa optimizada:
 
@@ -15,7 +15,7 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
 
 ---
 
-## 📁 Estructura del Repositorio
+##  Estructura del Repositorio
 
 
 📁 Plataforma-Observabilidad-IoT/
@@ -30,7 +30,7 @@ La plataforma procesa ráfagas continuas de datos a través de una arquitectura 
     ├── 📁 bronze/                # Repositorio inmutable de telemetría cruda (.json)
     ├── 📁 silver/                # Tabla Delta Lake optimizada (telemetry_clean)
     └── 📁 gold/                  # Características y predicciones listas para la IA
-## 📊 Estrategia de KPIs DataOps Implementados
+##  Estrategia de KPIs DataOps Implementados
 La salud operativa del pipeline y la confianza del modelo de Inteligencia Artificial se auditan programáticamente mediante 4 métricas clave:
 
 DER (Tasa de Error de Datos): Porcentaje de JSONs corruptos o nulos recibidos. Umbral crítico: < 1.5%.
@@ -41,7 +41,7 @@ DCR (Tasa de Completitud): Éxito de la restauración matemática de nulos en Sp
 
 Score F1 (Rendimiento de IA): Balance de precisión del algoritmo Isolation Forest. Umbral aprobado: > 85%.
 
-## 🚀 Guía de Instalación y Despliegue Local
+##  Guía de Instalación y Despliegue Local
 Requisitos Previos
 Tener instalado Docker y Docker Compose.
 
@@ -71,7 +71,7 @@ IDE de Ingeniería (Jupyter Lab): Accede a http://localhost:8888 para explorar y
 
 Consola de Spark (Spark UI): Monitoriza el rendimiento de los grafos acíclicos directos (DAGs) de tus consultas distribuidas en http://localhost:4040.
 
-## 🔒 Seguridad, Gobierno y Cumplimiento (EU AI Act)
+##  Seguridad, Gobierno y Cumplimiento (EU AI Act)
 Trazabilidad Histórica: Gracias al Transaction Log de la arquitectura Delta Lake, cualquier ingeniero de la planta puede realizar consultas retrospectivas (VERSION AS OF), garantizando auditoría completa del linaje de datos.
 
 Cumplimiento Regulatorio: Al actuar sobre infraestructura industrial crítica, este sistema ha sido diseñado bajo los lineamientos para Sistemas de IA de Alto Riesgo de la Ley de Inteligencia Artificial de la Unión Europea, implementando bitácoras de calidad automatizadas y un panel web explícito para la supervisión humana directa.
