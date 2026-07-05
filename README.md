@@ -8,6 +8,7 @@ Lo mejor de este sistema es que no necesitas saber programar ni escribir código
 El sistema opera de forma automática simulando el recorrido de los materiales en una fábrica física, pero con datos:
 
 
+  
   [ Sensores en Maquinaria ] 
              │
              ▼
@@ -21,6 +22,8 @@ El sistema opera de forma automática simulando el recorrido de los materiales e
              │
              ▼
  [ Dashboard Web / Discord ] --> Te muestra los gráficos interactivos y te envía alertas al celular.
+
+
 
 ##  Guía de Encendido en 3 Pasos (Sin programar)
 ## Para poner en marcha la plataforma en tu computadora, solo debes seguir estas instrucciones visuales:
