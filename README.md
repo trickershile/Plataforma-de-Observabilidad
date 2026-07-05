@@ -1,3 +1,4 @@
+```text
 # Plataforma de Observabilidad e IA para IoT Industrial (POIA-IoT)
 
 POIA-IoT es una plataforma de observabilidad a nivel de **Data Lakehouse** orientada a la ingesta masiva, limpieza automatizada transaccional (ACID) y modelado predictivo de telemetría proveniente de activos industriales críticos. Utiliza un algoritmo no supervisado (*Isolation Forest*) para aislar desviaciones térmicas y de vibración en tiempo real, notificando automáticamente fallas críticas a los ingenieros de planta.
