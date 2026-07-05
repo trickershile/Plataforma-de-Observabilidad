@@ -13,12 +13,15 @@ El sistema opera de forma automática simulando el recorrido de los materiales e
              │
              ▼
   ( Capa 1: Datos Crudos )  --> Guarda todo tal como llega de las máquinas.
+  
              │
              ▼
   ( Capa 2: Limpiador )     --> Corrige errores y rellena datos perdidos de forma automática.
+  
              │
              ▼
   ( Capa 3: Cerebro IA )    --> El algoritmo analiza si la temperatura o vibración es peligrosa.
+  
              │
              ▼
  [ Dashboard Web / Discord ] --> Te muestra los gráficos interactivos y te envía alertas al celular.
