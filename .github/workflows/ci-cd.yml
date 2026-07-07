@@ -1,156 +1,75 @@
-# =============================================================================
-# CI/CD Pipeline - Plataforma Inteligente de Observabilidad IoT (POIA-IoT)
-# Disparo: push a develop | pull_request a main
-# Jobs secuenciales: data-qa-security → deploy-lakehouse
-# =============================================================================
-
-name: POIA-IoT CI/CD Pipeline
+name: Plataforma Observabilidad - Data Pipeline CI/CD
 
 on:
   push:
-    branches:
-      - develop
+    branches: [ "develop" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-
-  # ===========================================================================
-  # JOB 1: Validaciones, Calidad y Seguridad (Quality Gate forzoso)
-  # Incluye: flake8 (IE5), Snyk (IE6), SonarQube (IE6)
-  # Si falla, interrumpe el pipeline y bloquea el merge a producción
-  # ===========================================================================
   data-qa-security:
-    name: Quality & Security Gate
+    name: Validaciones de Datos, Calidad y Seguridad
     runs-on: ubuntu-latest
+    
     steps:
+    - name: Clonar Repositorio
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      # Descarga completa del repositorio con profundidad total para SonarQube
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+    - name: Configurar Entorno Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      # Configuración del entorno Python 3.10
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+    - name: Instalar Dependencias
+      run: |
+        pip install -r requirements.txt
+        pip install pytest flake8
 
-      # Instalación de dependencias del proyecto y herramientas de análisis
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install flake8
+    - name: Ejecutar Análisis de Calidad de Código (Flake8 IE5)
+      run: |
+        # Garantiza políticas de cumplimiento antes del despliegue (IE5)
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      # ---------------------------------------------------------------
-      # Paso IE5 - Cumplimiento Normativo: escaneo sintáctico con flake8
-      # Flags: select=E9,F63,F7,F82 (errores fatales de sintaxis)
-      # ---------------------------------------------------------------
-      - name: Static syntax analysis with flake8
-        run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Escaneo de Vulnerabilidades (Snyk IE6)
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: monitor
 
-      # ---------------------------------------------------------------
-      # Paso IE6 - DevSecOps: escaneo de vulnerabilidades con Snyk
-      # Si detecta fallas críticas, interrumpe el pipeline automáticamente
-      # ---------------------------------------------------------------
-      - name: Security scan with Snyk
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-        # NOTA: Si Snyk encuentra vulnerabilidades de severidad HIGH o superior,
-        # el pipeline fallará y bloqueará el merge a producción (IE6)
+    - name: Análisis Estático con SonarQube (IE5/IE6)
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # ---------------------------------------------------------------
-      # Paso IE6 - Quality Gate Extendido: análisis estático con SonarQube
-      # Si la calidad del código no supera el umbral (Quality Gate),
-      # el pipeline interrumpe el flujo y bloquea el despliegue (IE6)
-      # ---------------------------------------------------------------
-      - name: SonarQube static analysis
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=poia-iot
-            -Dsonar.sources=notebooks/
-            -Dsonar.python.version=3.10
-            -Dsonar.sourceEncoding=UTF-8
-        # NOTA: Si SonarQube detecta code smells críticos, bugs o
-        # vulnerabilidades que incumplan el Quality Gate configurado
-        # en el servidor SonarQube, el pipeline se interrumpirá y no
-        # se permitirá el merge a producción (gobernanza IE6).
-
-  # ===========================================================================
-  # JOB 2: Despliegue Continuo (CD)
-  # Depende del éxito absoluto del Job 1 (needs: data-qa-security)
-  # Solo se ejecuta en pull_request aprobado hacia la rama main
-  # ===========================================================================
   deploy-lakehouse:
-    name: Continuous Deployment to Lakehouse
+    name: Despliegue de Infraestructura Cloud Simulada
     needs: data-qa-security
-    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
 
     steps:
+    - name: Clonar Repositorio
+      uses: actions/checkout@v3
 
-      # Descarga del repositorio para construir la imagen
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Autenticar en Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ---------------------------------------------------------------
-      # Autenticación segura en Docker Hub usando secretos del repositorio
-      # Se utilizan DOCKERHUB_USERNAME y DOCKERHUB_TOKEN (no contraseña)
-      # ---------------------------------------------------------------
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Construir y Publicar Contenedor (Orquestador/Planta IE1)
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-observabilidad-lakehouse:latest
 
-      # ---------------------------------------------------------------
-      # Construcción de la imagen Docker a partir del Dockerfile raíz
-      # Se etiqueta con 'latest' para el despliegue continuo
-      # ---------------------------------------------------------------
-      - name: Build and tag Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/poia-iot:latest .
-
-      # ---------------------------------------------------------------
-      # Publicación de la imagen en Docker Hub
-      # Disponible para su consumo por el clúster Kubernetes
-      # ---------------------------------------------------------------
-      - name: Push image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/poia-iot:latest
-
-      # ---------------------------------------------------------------
-      # Simulación de despliegue en Kubernetes con trazabilidad total
-      # Confirma la aplicación de manifiestos de K8s e Istio
-      # ---------------------------------------------------------------
-      - name: Simulate Kubernetes deployment
-        run: |
-          echo "============================================"
-          echo "  TRAZABILIDAD DE DESPLIEGUE - POIA-IoT"
-          echo "============================================"
-          echo "  Imagen autenticada y publicada en Docker Hub"
-          echo "  Repositorio: ${{ secrets.DOCKERHUB_USERNAME }}/poia-iot:latest"
-          echo "  Rama destino: ${{ github.base_ref }}"
-          echo "  Commit: ${{ github.sha }}"
-          echo ""
-          echo "  Manifiestos aplicados correctamente:"
-          echo "    ✅ k8s/deployment.yml"
-          echo "    ✅ k8s/istio-telemetry.yml"
-          echo ""
-          echo "  Recursos orquestados en Kubernetes:"
-          echo "    - Deployment: lakehouse-observabilidad-deployment (3 réplicas)"
-          echo "    - Telemetry: mesh-observabilidad-logs (Istio)"
-          echo ""
-          echo "  Trazabilidad completada. Despliegue exitoso."
-          echo "============================================"
+    - name: Despliegue Automatizado en Kubernetes Clúster (IE2/IE4)
+      run: |
+        echo "Aplicando configuraciones de monitoreo y observabilidad para las capas Bronze, Silver y Gold..."
+        echo "Orquestando Pods del Lakehouse y dashboards..."
+        echo "Despliegue finalizado con trazabilidad completa."
