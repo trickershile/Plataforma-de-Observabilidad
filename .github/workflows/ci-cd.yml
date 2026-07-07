@@ -32,6 +32,11 @@ jobs:
         # Garantiza políticas de cumplimiento antes del despliegue (IE5)
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
+    - name: Ejecutar Pruebas Unitarias (Pytest IE7)
+      run: |
+        # Batería de pruebas automatizadas para validar estabilidad del código (IE7)
+        python -m pytest tests/ -v --tb=short
+
     - name: Escaneo de Vulnerabilidades (Snyk IE6)
       uses: snyk/actions/python@master
       env:
