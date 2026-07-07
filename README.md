@@ -110,7 +110,9 @@ docker-compose down
 Este comando apagará todos los procesos de forma limpia y liberará por completo la memoria RAM de tu computadora. No perderás información: todo el histórico acumulado de la planta quedará guardado de forma segura dentro de tu carpeta lakehouse/ para el día siguiente.
 
 Plataforma POIA-IoT — Democratizando la IA Industrial. 
+
 Desarrollado por Víctor Manuel Garay Soto — Sección 002D — Duoc UC.
+
 Desarrollado con fines académicos y de producción bajo estándares de MLOps y DataOps. Autor: Víctor Manuel Garay Soto — Duoc UC
 
 Diseñado para democratizar la Inteligencia Artificial industrial. Desarrollado por Víctor Manuel Garay Soto — Duoc UC. Para soporte técnico, contactar al administrador del sistema.
