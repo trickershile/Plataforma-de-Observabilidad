@@ -1,0 +1,98 @@
+# =============================================================================
+# Telemetría de Istio Service Mesh - POIA-IoT
+# Inyección automática de métricas (Prometheus) y logs de acceso (Envoy)
+# para observabilidad automatizada de la planta industrial (IE11, IE12)
+# =============================================================================
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: mesh-observabilidad-logs
+  namespace: default
+spec:
+  # ---------------------------------------------------------------
+  # Selector: aplica esta telemetría a todos los Pods que tengan
+  # la etiqueta app: lakehouse-app (nuestro microservicio)
+  # ---------------------------------------------------------------
+  selector:
+    matchLabels:
+      app: lakehouse-app
+
+  # ---------------------------------------------------------------
+  # Métricas de tráfico en tiempo real vía Prometheus
+  # Recolecta automáticamente:
+  #   - Latencia del pipeline (PL)
+  #   - Tasas de éxito/error por petición
+  #   - Rendimiento (throughput) de los microservicios
+  # Se inyectan tags contextuales: ruta, origen y destino
+  # ---------------------------------------------------------------
+  metrics:
+    - providers:
+        - name: prometheus
+      overrides:
+        - match:
+            mode: CLIENT_AND_SERVER
+          tagOverrides:
+            request_operation:
+              value: "$(request.url_path)"
+            source_app:
+              value: "$(source.workload.name)"
+            destination_app:
+              value: "$(destination.workload.name)"
+
+  # ---------------------------------------------------------------
+  # Logs de acceso y auditoría técnica vía Envoy (Sidecar Proxy)
+  # Filtro: solo registra respuestas con código >= 400 (errores)
+  # Modo: SERVER (logs del lado del servicio destino)
+  # ---------------------------------------------------------------
+  accessLogging:
+    - providers:
+        - name: envoy
+      filter:
+        expression: |
+          response.code >= 400
+      match:
+        mode: SERVER
+
+---
+# =============================================================================
+# ServiceEntry para Prometheus
+# Permite que los Sidecars de Istio resuelvan y enruten tráfico
+# hacia el servicio de Prometheus en el namespace de monitoreo
+# =============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: prometheus-metrics
+  namespace: default
+spec:
+  hosts:
+    - prometheus.monitoring.svc.cluster.local
+  ports:
+    - number: 9090
+      name: http-metrics
+      protocol: HTTP
+  resolution: STATIC
+  endpoints:
+    - address: prometheus.monitoring.svc.cluster.local
+
+---
+# =============================================================================
+# ServiceEntry para Kiali
+# Permite la comunicación entre la malla de servicios y la interfaz
+# de visualización de Kiali para trazabilidad topológica
+# =============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kiali-telemetry
+  namespace: default
+spec:
+  hosts:
+    - kiali.istio-system.svc.cluster.local
+  ports:
+    - number: 20001
+      name: http-kiali
+      protocol: HTTP
+  resolution: STATIC
+  endpoints:
+    - address: kiali.istio-system.svc.cluster.local

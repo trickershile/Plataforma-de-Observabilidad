@@ -16,10 +16,10 @@ services:
     user: root
     command: >
       bash -c "
-      /opt/conda/bin/pip install streamlit plotly && 
-      . /usr/local/bin/before-notebook.d/spark-config.sh && 
-      cd /home/jovyan/work/notebooks && 
-      /opt/conda/bin/python orquestador_planta.py && 
+      /opt/conda/bin/pip install -r /home/jovyan/work/notebooks/requirements.txt &&
+      . /usr/local/bin/before-notebook.d/spark-config.sh &&
+      cd /home/jovyan/work/notebooks &&
+      nohup /opt/conda/bin/python orquestador_planta.py > /tmp/orquestador.log 2>&1 &
       /opt/conda/bin/streamlit run app_dashboard.py --server.port 8501 --server.address 0.0.0.0 &
       exec start-notebook.sh --LabApp.token='' --LabApp.password=''
       "

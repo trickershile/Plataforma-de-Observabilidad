@@ -11,10 +11,12 @@ st.set_page_config(
     page_icon="🏭"
 )
 
-# Definición de rutas absolutas locales dentro del contenedor
-RUTA_GOLD = "/home/jovyan/work/lakehouse/gold/telemetry_features"
-KPI_INFRA_PATH = "/home/jovyan/work/lakehouse/kpis_infra.txt"
-ALERT_LOG_PATH = "/home/jovyan/work/lakehouse/alertas.log"
+# Definición de rutas (configurables vía variable de entorno, con fallback al contenedor Jupyter)
+RUTA_BASE = os.environ.get("LAKEHOUSE_PATH", "/home/jovyan/work/lakehouse")
+RUTA_GOLD = os.path.join(RUTA_BASE, "gold/telemetry_features")
+KPI_INFRA_PATH = os.path.join(RUTA_BASE, "kpis_infra.txt")
+# ALERT_LOG_PATH también es configurable vía LOG_FILE_PATH (usado en K8s deployment)
+ALERT_LOG_PATH = os.environ.get("LOG_FILE_PATH", os.path.join(RUTA_BASE, "alertas.log"))
 
 # Títulos Principales de la Plataforma
 st.title("🏭 Panel de Control Global - POIA-IoT")
