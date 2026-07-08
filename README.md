@@ -322,3 +322,5 @@ Desarrollado con fines académicos y de producción bajo estándares de MLOps y 
 **Institución:** Duoc UC
 
 *Plataforma POIA-IoT — Democratizando la IA Industrial.*
+< ! - -   T r i g g e r   D e v O p s   P i p e l i n e   C h e c k   - - >  
+ 
