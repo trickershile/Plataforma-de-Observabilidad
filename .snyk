@@ -1,0 +1,8 @@
+# Snyk (https://snyk.io) policy file, generated with a custom ignore strategy.
+version: v1.25.0
+ignore:
+  # Ignorar la base de datos local y los logs transitorios del Lakehouse
+  'lakehouse/':
+    - '*':
+        reason: 'Data lakehouse layers and delta logs should not be scanned as source code.'
+        expires: 2030-01-01T00:00:00.000Z
