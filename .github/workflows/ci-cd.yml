@@ -45,13 +45,18 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        command: monitor
+        command: test
+      continue-on-error: false
 
     - name: Análisis Estático con SonarQube
       uses: sonarsource/sonarqube-scan-action@v2.0.2
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      with:
+        args: >
+          -Dsonar.qualitygate.wait=true
+          -Dsonar.qualitygate.timeout=300
 
   build-and-push:
     name: Construir y Publicar Imagen Docker

@@ -28,18 +28,24 @@ Para mantener el orden de la planta digital, los archivos están estrictamente c
 │       └── 📄 ci-cd.yml          # Flujo de automatización para pruebas, calidad y seguridad
 │
 ├── 📁 k8s/                       # [INFRAESTRUCTURA] Manifiestos de orquestación cloud
+│   ├── 📄 namespace.yml          # Namespace dedicado para el entorno de observabilidad
 │   ├── 📄 deployment.yml         # Configuración de réplicas, límites de hardware y salud
 │   └── 📄 istio-telemetry.yml    # Inyección de telemetría automática en la malla de servicios
 │
 ├── 📁 tests/                     # [CALIDAD] Pruebas unitarias automatizadas (pytest)
+│   ├── 📄 __init__.py            # Inicializador del paquete de tests
 │   ├── 📄 test_orquestador.py    # Tests del orquestador de planta
 │   ├── 📄 test_dashboard.py      # Tests del dashboard Streamlit
-│   └── 📄 test_dockerfile.py     # Tests de infraestructura (Dockerfile, K8s)
+│   ├── 📄 test_dockerfile.py     # Tests de infraestructura (Dockerfile, K8s, Istio, SonarQube)
+│   └── 📄 test_acceptance.py     # Pruebas de aceptación pre-despliegue (IE13)
 │
 ├── 📄 docker-compose.yml         # El "botón de encendido" que levanta toda la planta digital local.
+├── 📄 .dockerignore              # Exclusiones para construcción de imagen Docker
 ├── 📄 Dockerfile                 # Receta de construcción de la imagen de contenedor optimizada
 ├── 📄 requirements.txt           # Librerías y dependencias técnicas del ecosistema
 ├── 📄 .gitignore                 # Exclusiones de control de versiones
+├── 📄 sonar-project.properties   # Configuración de SonarQube Cloud
+├── 📄 .snyk                      # Política de escaneo Snyk
 └── 📄 README.md                  # Este manual de instrucciones que estás leyendo.
 │
 ├── 📁 notebooks/                 # [CEREBRO ANALÍTICO] Códigos de control y pantallas visuales
@@ -97,31 +103,36 @@ merge(feature): integrate K8s resource configuration into develop
 El corazón de la automatización reside en el flujo configurado en `.github/workflows/ci-cd.yml`. Este pipeline se dispara automáticamente ante cualquier **push en develop** o **pull_request hacia main**, ejecutando de manera secuencial:
 
 ```
-[Git push] ──> [data-qa-security] ──> [deploy-lakehouse]
-                  │                          │
-            (Quality Gate)            (Despliegue Cloud)
-                  │                          │
-            flake8 (IE5)               Docker Hub build
-            Snyk (IE6)                 Push image
-            SonarQube (IE6)            Simulación K8s
-            Pytest (IE7)
+[Git push] ──> [data-qa-security] ──> [build-and-push] ──> [deploy-lakehouse]
+                  │                          │                       │
+            (Quality Gate)            (Registro Docker)       (Kubernetes)
+                  │                          │                       │
+            flake8 (IE5)               Build & Push            kubectl apply
+            Pytest (IE7)               Docker Hub              rollout status
+            Snyk (IE6/IE13)            latest + sha            Istio telemetry
+            SonarQube (IE6/IE13)
 ```
 
 **Job 1: `data-qa-security`** — Validaciones, Calidad y Seguridad:
 1. **Checkout** con `fetch-depth: 0` para análisis completo
-2. **Python 3.10** configurado
+2. **Python 3.11** configurado con **caching de pip**
 3. **Instalación de dependencias** + flake8 + pytest
-4. **Flake8 (IE5):** Escaneo sintáctico estático con flags `E9,F63,F7,F82`
-5. **Pytest (IE7):** Ejecución de batería de 9 pruebas unitarias
-6. **Snyk (IE6/IE13):** Escaneo de vulnerabilidades críticas en dependencias
-7. **SonarQube (IE6/IE13):** Análisis estático con Quality Gate
+4. **Flake8 (IE5):** Escaneo sintáctico estático con flags `E9,F63,F7,F82` + `max-complexity=10`
+5. **Pytest (IE7):** Ejecución de batería de **35 pruebas unitarias** (unitarias + infraestructura + aceptación)
+6. **Snyk (IE6/IE13):** Escaneo de vulnerabilidades críticas en dependencias — **interrumpe el pipeline si falla**
+7. **SonarQube (IE6/IE13):** Análisis estático con Quality Gate — **fallo bloquea el despliegue**
 
-**Job 2: `deploy-lakehouse`** — Despliegue Continuo:
-- Depende del éxito absoluto de `data-qa-security`
-- Solo se ejecuta en **Pull Request aprobado hacia `main`**
+**Job 2: `build-and-push`** — Construcción y Publicación (IE6, IE9):
+- Se ejecuta solo en **push a `main`**
 - Autenticación en Docker Hub via `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN`
-- Construcción y publicación de imagen Docker
-- Trazabilidad completa del despliegue con confirmación de manifiestos K8s e Istio
+- Construcción y publicación de imagen Docker con **tags `latest` + `sha`**
+- Depende del éxito absoluto de `data-qa-security`
+
+**Job 3: `deploy-lakehouse`** — Despliegue Continuo en Kubernetes (IE10, IE12):
+- Se ejecuta solo en **push a `main`**, después de `build-and-push`
+- **kubectl apply** de `deployment.yml` e `istio-telemetry.yml`
+- **Rollout status** con timeout de 300s para verificar despliegue exitoso
+- Reemplazo automático de la imagen en el manifiesto con el SHA específico
 
 ---
 
@@ -131,11 +142,12 @@ Garantizamos la seguridad y gobernanza de la plataforma mediante herramientas de
 
 | Herramienta | Función | Indicador |
 |---|---|---|
-| **flake8** | Análisis sintáctico estático (errores fatales) | IE5 |
-| **pytest** | Pruebas unitarias automatizadas (9 tests) | IE7 |
+| **flake8** | Análisis sintáctico estático (errores fatales + complejidad) | IE5 |
+| **pytest** | Pruebas unitarias automatizadas (35 tests) | IE7 |
 | **SonarQube** | Code smells, bugs, duplicación, Quality Gate | IE6, IE13 |
 | **Snyk** | Vulnerabilidades de seguridad en dependencias | IE6, IE13 |
-| **Quality Gate** | Interrupción del pipeline si falla cualquier análisis | IE6 |
+| **Dependabot** | Escaneo automático de dependencias obsoletas/vulnerables | IE8, IE13 |
+| **Quality Gate** | Interrupción del pipeline si falla cualquier análisis (Snyk `test`, SonarQube fail gate) | IE6, IE9 |
 
 **Medidas de Seguridad (IE8):**
 - Todos los tokens y credenciales almacenados en **GitHub Secrets** (nunca en código fuente)
@@ -149,30 +161,24 @@ Garantizamos la seguridad y gobernanza de la plataforma mediante herramientas de
 ### 4. Contenedorización y Orquestación Cloud (IE6, IE10)
 
 **Dockerfile** — Imagen reproducible y eficiente:
-- Base: `python:3.10-slim` (imagen ligera ~120MB)
-- Java 11 Runtime para ejecución de PySpark
+- Base: `python:3.11-slim` (imagen ligera ~120MB)
+- Java 17 Runtime para ejecución de PySpark
 - Dependencias Python: streamlit, plotly, pandas, scikit-learn, pyspark, delta-spark
+- Copias específicas (`notebooks/` y `lakehouse/`) — evita incluir tests/, .git/, etc.
+- **HEALTHCHECK** configurado: HTTP GET a puerto 8501 cada 30s
+- `.dockerignore` para optimizar el build context
 - Puertos expuestos: **8501** (Streamlit), **4040** (Spark UI), **8888** (Jupyter)
 - CMD por defecto: `python notebooks/orquestador_planta.py`
 
 **Kubernetes Deployment** — Alta disponibilidad y gobernanza (IE8, IE10):
-```yaml
-replicas: 3                    # 3 réplicas simultáneas
-resources:
-  limits:
-    cpu: "1000m"               # Máximo 1 núcleo CPU
-    memory: "1Gi"              # Máximo 1GB RAM
-  requests:
-    cpu: "500m"                # Reserva mínima garantizada
-    memory: "512Mi"
-livenessProbe:                 # Auto-diagnóstico y reinicio
-  httpGet:
-    path: /
-    port: 8501
-  initialDelaySeconds: 30
-  periodSeconds: 30
-  failureThreshold: 3
-```
+- **3 réplicas** simultáneas para tolerancia a fallos
+- **Resource limits:** CPU 1000m / Memoria 1Gi
+- **Resource requests:** CPU 500m / Memoria 512Mi
+- **startupProbe:** 30 intentos (300s) para aplicaciones Spark de inicio lento
+- **livenessProbe:** HTTP GET puerto 8501 cada 30s, 3 fallos = reinicio
+- **readinessProbe:** HTTP GET puerto 8501 cada 10s, 3 fallos = tráfico detenido
+- **Service** ClusterIP exponiendo puertos 8501 y 4040
+- **Namespace dedicado:** `observabilidad`
 
 ---
 
@@ -283,16 +289,22 @@ Este comando apagará todos los procesos de forma limpia y liberará por complet
 
 | IE | Descripción | ¿Dónde se implementa? |
 |---|---|---|
-| **IE1/IE2** | Ramificación Git Flow | Ramas `main`, `develop`, `feature/*`, `hotfix/*` |
-| **IE3** | Trazabilidad Git | Commits con Conventional Commits y merge strategy |
-| **IE4** | Automatización CI/CD | `.github/workflows/ci-cd.yml` — 2 jobs secuenciales |
-| **IE5** | Documentación y buenas prácticas | Este README, estructura de carpetas, convenciones |
-| **IE6/IE10** | Contenedores y orquestación | `Dockerfile` + `k8s/deployment.yml` (3 réplicas) |
-| **IE7** | Pruebas automatizadas | `tests/` con pytest, integrado en pipeline CI/CD |
-| **IE8** | Escalabilidad y gobernanza | `resources.limits` CPU 1000m / Memoria 1Gi + GitHub Secrets |
-| **IE9** | Despliegue automático | Pipeline CD: Docker Hub build/push → simulación K8s |
-| **IE12** | Dashboards y métricas | Streamlit dashboard: PL, DER, DCR, F1 Score |
-| **IE13** | Cumplimiento y auditoría | SonarQube + Snyk en pipeline con Quality Gates |
+| **IE1** | Modelos de ramificación | Git Flow: `main`, `develop`, `feature/*`, `hotfix/*` — README sección 1 |
+| **IE2** | Repositorio Git estructurado | Ramas con estrategia definida y justificada en README sección 1 |
+| **IE3** | Flujo colaborativo Git | Commits con Conventional Commits, PRs con merge strategy |
+| **IE4** | Flujo CI/CD automatizado | `.github/workflows/ci-cd.yml` — 3 jobs secuenciales |
+| **IE5** | Documentación y buenas prácticas | README, estructura de carpetas, convenciones de commits |
+| **IE6** | Contenedores | `Dockerfile` + `.dockerignore` + `docker-compose.yml` |
+| **IE7** | Pruebas automatizadas | `tests/` con pytest (35 tests), integrado en pipeline CI/CD |
+| **IE8** | Escalabilidad y seguridad | `resources.limits/requests`, Snyk, Dependabot, GitHub Secrets |
+| **IE9** | Despliegue automático | Pipeline: Docker Hub build/push → kubectl apply → rollout status |
+| **IE10** | Orquestación contenedores | `k8s/deployment.yml` (3 réplicas, probes, resources) + `k8s/service.yml` |
+| **IE11** | Monitoreo y logging | Istio Telemetry (Prometheus + Envoy) + `alertas.log` |
+| **IE12** | Dashboards y métricas | Streamlit dashboard: PL, DER, DCR, F1 Score + CloudWatch simulado |
+| **IE13** | Cumplimiento y auditoría | SonarQube + Snyk + Dependabot + acceptance tests + branch protection |
+| **IE14** | Fundamentación | Esta documentación técnica + presentación oral |
+| **IE15** | Lenguaje técnico | Terminología DevOps: CI/CD, Git Flow, K8s, Istio, Service Mesh |
+| **IE16** | Dominio del tema | Presentación oral + respuestas a preguntas del docente |
 
 ---
 
@@ -307,11 +319,17 @@ Para transformar este prototipo local en una plataforma industrial escalable de 
 
 **Pipeline CI/CD End-to-End:**
 1. Push a `develop` o PR hacia `main` → dispara el pipeline
-2. Job `data-qa-security`: flake8 → pytest → Snyk → SonarQube
-3. Si Quality Gate falla → pipeline detenido, merge bloqueado
-4. Si PR a `main` es aprobado → Job `deploy-lakehouse`
-5. Login Docker Hub → Build → Push image → Simulación despliegue K8s
-6. Manifiestos aplicados: `deployment.yml` + `istio-telemetry.yml`
+2. Job `data-qa-security`: flake8 → pytest → Snyk (`test` mode) → SonarQube (fail gate)
+3. Si Quality Gate falla (Snyk detecta vulns, SonarQube no aprueba) → pipeline detenido, merge bloqueado
+4. Si push a `main` → Job `build-and-push`: Docker Hub login → build → push (tags `latest` + `sha`)
+5. Job `deploy-lakehouse`: kubectl apply → kubectl rollout status (timeout 300s)
+6. Manifiestos aplicados: `deployment.yml` + `istio-telemetry.yml` en namespace `observabilidad`
+
+**Políticas de Seguridad en GitHub (IE13):**
+- **Branch protection rules** en `main`: requiere PR con al menos 1 approval antes del merge
+- **Require status checks**: todos los jobs del pipeline deben pasar exitosamente
+- **Dependabot**: escaneo semanal de dependencias con alertas automáticas
+- **Snyk `test`** (no `monitor`): el pipeline falla si se detectan vulnerabilidades críticas
 
 ---
 
