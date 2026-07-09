@@ -1,0 +1,34 @@
+* [33md617e33[m[33m ([m[1;31morigin/develop[m[33m)[m Update README.md
+* [33mb01b25f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m)[m feat: improve app_dashboard.py layout and readability; adjust chart and dataframe display settings
+* [33m0c31226[m feat: enhance app_dashboard.py with improved UI components and metrics visualization; add support for sensor data analysis
+* [33m10de7c5[m feat: update Java version to 21 in Dockerfile; enhance path detection in notebooks and tests
+* [33m5fa5338[m feat: enhance CI/CD pipeline with Snyk test and SonarQube quality gate checks; add acceptance tests for deployment configurations
+* [33md7b4d3a[m Refactor Docker and Kubernetes configurations for observability platform
+* [33mb914f9a[m Update latency value and add SonarCloud configuration
+* [33m3724afc[m chore: add .snyk file to exclude lakehouse data from security scans
+* [33m0eb7513[m chore: force pipeline trigger for verification
+* [33ma789ce5[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m docs(devops): restructure README with full Git Flow strategy, IE mapping and conventions
+* [33m620b144[m[33m ([m[1;32mhotfix/snyk-secret-rotation[m[33m)[m fix(security): rotate Snyk token and remove hardcoded credentials
+* [33m166c4af[m test(quality): add unit tests for orquestador, dashboard and infrastructure validation
+* [33medbbb39[m feat(tests): add test suite structure with pytest
+*   [33me96e5a8[m[33m ([m[1;32mfeature/k8s-resources-config[m[33m)[m refactor: Simplify CI/CD pipeline configuration and improve job descriptions
+[32m|[m[33m\[m  
+[32m|[m * [33m25f6547[m Update README.md
+[32m|[m * [33mbf651a7[m Update README with project details and author info
+[32m|[m * [33mc30ae65[m Update README.md
+* [33m|[m [33m3c6311c[m feat: Enhance POIA-IoT documentation and structure
+* [33m|[m [33ma8467c9[m Refactor README to improve author and institution details formatting
+[33m|[m[33m/[m  
+* [33m768c9e0[m Revise README for platform overview and usage details
+* [33ma7df399[m Update README.md
+* [33mfe9da7c[m Update README with POIA-IoT platform description
+* [33m6a1c748[m Update README.md
+* [33mecd7e75[m Update README.md structure and formatting
+* [33mfcca9fa[m Update README.md
+* [33m1a182a9[m Update README with DataOps KPIs and structure
+* [33mf7d19e3[m Fix formatting and headings in README.md
+* [33m064b3aa[m Update README.md
+* [33m80ad55d[m Update README.md
+* [33m48ed4dd[m Update README.md
+* [33mf4f6eb9[m Añadir README.md con guía de uso y funcionamiento de la Plataforma POIA-IoT; crear archivo de alertas y KPIs de infraestructura.
+* [33mcaafcdd[m feat: Add IoT data simulation and processing notebooks

@@ -34,7 +34,7 @@ jobs:
     - name: Ejecutar Análisis de Calidad de Código (Flake8)
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 notebooks/ --count --max-complexity=10 --statistics
+        flake8 notebooks/ --count --max-complexity=10 --max-line-length=120 --exclude=.ipynb_checkpoints --statistics
 
     - name: Ejecutar Pruebas Unitarias (Pytest)
       run: |

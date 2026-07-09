@@ -11,16 +11,8 @@ services:
       - ./notebooks:/app/notebooks
       - ./lakehouse:/app/lakehouse
     environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - GRANT_SUDO=yes
-      - RESTARTABLE=yes
+      - LAKEHOUSE_PATH=/app/lakehouse
+      - LOG_FILE_PATH=/app/lakehouse/alertas.log
     user: root
     restart: unless-stopped
-    command: >
-      bash -c "
-      pip install --no-cache-dir -r /app/notebooks/requirements.txt &&
-      cd /app/notebooks &&
-      nohup python orquestador_planta.py > /tmp/orquestador.log 2>&1 &
-      streamlit run app_dashboard.py --server.port 8501 --server.address 0.0.0.0 &
-      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='poia-token' --NotebookApp.password=''
-      "
+    command: bash /app/notebooks/start.sh

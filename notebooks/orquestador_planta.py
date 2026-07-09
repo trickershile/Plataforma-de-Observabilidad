@@ -5,7 +5,6 @@ import time
 import json
 import urllib.request
 import pandas as pd
-from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # Configuración de rutas (configurables vía variables de entorno)
@@ -23,9 +22,13 @@ RUTA_GOLD = os.path.join(LAKEHOUSE_BASE, "gold", "telemetry_features")
 # URL del webhook de Discord (NUNCA hardcodear tokens - usar variable de entorno)
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
+
 def ejecutar_fase(nombre_notebook):
     print(f"⚙️ Ejecutando componente: {nombre_notebook}...")
-    comando = [sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", nombre_notebook, "--inplace"]
+    comando = [
+        sys.executable, "-m", "jupyter", "nbconvert",
+        "--to", "notebook", "--execute", nombre_notebook, "--inplace"
+    ]
     resultado = subprocess.run(comando, capture_output=True, text=True)
 
     if resultado.returncode == 0:
@@ -35,6 +38,7 @@ def ejecutar_fase(nombre_notebook):
         print(f"❌ Error crítico en {nombre_notebook}:\n", resultado.stderr)
         return False
 
+
 def enviar_alerta_discord(mensaje):
     if not DISCORD_WEBHOOK_URL:
         print("⚠️ DISCORD_WEBHOOK_URL no configurado. Omitiendo notificación.")
@@ -42,12 +46,16 @@ def enviar_alerta_discord(mensaje):
     payload = {"content": mensaje}
     headers = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
     try:
-        req = urllib.request.Request(DISCORD_WEBHOOK_URL, data=json.dumps(payload).encode('utf-8'), headers=headers)
-        with urllib.request.urlopen(req) as response:
-            pass
+        req = urllib.request.Request(
+            DISCORD_WEBHOOK_URL,
+            data=json.dumps(payload).encode('utf-8'),
+            headers=headers
+        )
+        urllib.request.urlopen(req)
         print("📲 Alerta enviada con éxito a los ingenieros de planta.")
     except Exception as e:
         print(f"⚠️ No se pudo enviar la notificación a Discord: {e}")
+
 
 def verificar_anomalias_y_notificar():
     try:
@@ -66,9 +74,14 @@ def verificar_anomalias_y_notificar():
                   f"en el último lote de sensores. Por favor revise el Dashboard de control."
             enviar_alerta_discord(msg)
         else:
-            enviar_alerta_discord("✅ **[POIA-IoT AI]** Ciclo de monitoreo completado. Operación de planta estable sin anomalías.")
+            msg_ok = (
+                "✅ **[POIA-IoT AI]** Ciclo de monitoreo completado. "
+                "Operación de planta estable sin anomalías."
+            )
+            enviar_alerta_discord(msg_ok)
     except Exception as e:
         print(f"Error al auditar alertas para notificación: {e}")
+
 
 if __name__ == "__main__":
     print("🚀 --- INICIANDO SISTEMA DE OBSERVABILIDAD DE PLANTA AUTOMÁTICO ---")
