@@ -441,40 +441,6 @@ with tab1:
         """, unsafe_allow_html=True)
 
 
-def _mostrar_metricas(df, total_mediciones, anomalias_detectadas, porcentaje_falla):
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown(f"""
-        <div class="metric-card green">
-            <div class="metric-label">Mediciones Totales (Capa Gold)</div>
-            <div class="metric-value">{total_mediciones:,}</div>
-            <div class="metric-delta">Registros historicos</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""
-        <div class="metric-card pink">
-            <div class="metric-label">Alertas de IA</div>
-            <div class="metric-value">{anomalias_detectadas}</div>
-            <div class="metric-delta">{porcentaje_falla:.1f}% del total de mediciones</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c3:
-        if anomalias_detectadas > 0:
-            status_class = "status-critical"
-            status_text = "Critico / Requiere Mantenimiento"
-        else:
-            status_class = "status-stable"
-            status_text = "Operacion Estable"
-        st.markdown(f"""
-        <div class="metric-card yellow">
-            <div class="metric-label">Estado de la Maquinaria</div>
-            <div class="metric-value"><span class="{status_class}">{status_text}</span></div>
-            <div class="metric-delta">Monitoreo en tiempo real</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-
 with tab2:
     section_ai = '<div class="section-title">Metricas de Rendimiento de la Inteligencia Artificial</div>'
     st.markdown(section_ai, unsafe_allow_html=True)
