@@ -283,30 +283,7 @@ docker-compose down
 
 Este comando apagará todos los procesos de forma limpia y liberará por completo la memoria RAM de tu computadora. No perderás información: todo el histórico acumulado de la planta quedará guardado de forma segura dentro de tu carpeta `lakehouse/` para el día siguiente.
 
----
 
-## 📋 Mapeo de Indicadores de Evaluación (IE)
-
-| IE | Descripción | ¿Dónde se implementa? |
-|---|---|---|
-| **IE1** | Modelos de ramificación | Git Flow: `main`, `develop`, `feature/*`, `hotfix/*` — README sección 1 |
-| **IE2** | Repositorio Git estructurado | Ramas con estrategia definida y justificada en README sección 1 |
-| **IE3** | Flujo colaborativo Git | Commits con Conventional Commits, PRs con merge strategy |
-| **IE4** | Flujo CI/CD automatizado | `.github/workflows/ci-cd.yml` — 3 jobs secuenciales |
-| **IE5** | Documentación y buenas prácticas | README, estructura de carpetas, convenciones de commits |
-| **IE6** | Contenedores | `Dockerfile` + `.dockerignore` + `docker-compose.yml` |
-| **IE7** | Pruebas automatizadas | `tests/` con pytest (35 tests), integrado en pipeline CI/CD |
-| **IE8** | Escalabilidad y seguridad | `resources.limits/requests`, Snyk, Dependabot, GitHub Secrets |
-| **IE9** | Despliegue automático | Pipeline: Docker Hub build/push → kubectl apply → rollout status |
-| **IE10** | Orquestación contenedores | `k8s/deployment.yml` (3 réplicas, probes, resources) + `k8s/service.yml` |
-| **IE11** | Monitoreo y logging | Istio Telemetry (Prometheus + Envoy) + `alertas.log` |
-| **IE12** | Dashboards y métricas | Streamlit dashboard: PL, DER, DCR, F1 Score + CloudWatch simulado |
-| **IE13** | Cumplimiento y auditoría | SonarQube + Snyk + Dependabot + acceptance tests + branch protection |
-| **IE14** | Fundamentación | Esta documentación técnica + presentación oral |
-| **IE15** | Lenguaje técnico | Terminología DevOps: CI/CD, Git Flow, K8s, Istio, Service Mesh |
-| **IE16** | Dominio del tema | Presentación oral + respuestas a preguntas del docente |
-
----
 
 ## 🏗️ Ciclo de Vida DevOps & Arquitectura de Infraestructura Cloud
 
