@@ -1,1 +1,1 @@
-latency:10.57
+latency:24.67
