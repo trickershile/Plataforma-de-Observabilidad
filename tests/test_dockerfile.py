@@ -40,11 +40,11 @@ class TestDockerfile(unittest.TestCase):
             content = f.read()
         self.assertIn("HEALTHCHECK", content)
 
-    def test_java_17_installed(self):
-        """Must install Java 17 JRE for PySpark"""
+    def test_java_installed(self):
+        """Must install Java JRE for PySpark"""
         with open(self.dockerfile_path, "r") as f:
             content = f.read()
-        self.assertIn("openjdk-17-jre-headless", content)
+        self.assertIn("openjdk-21-jre-headless", content)
 
 
 class TestDeploymentYaml(unittest.TestCase):

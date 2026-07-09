@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import time
 import json
@@ -8,19 +9,23 @@ from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # Configuración de rutas (configurables vía variables de entorno)
-# Por defecto apunta al volumen del Lakehouse en el contenedor Jupyter
+# Por defecto usa la ruta relativa al script, funciona en Docker y local
 # En Dockerfile/K8s se puede sobreescribir con LAKEHOUSE_PATH
 # ---------------------------------------------------------------------------
-LAKEHOUSE_BASE = os.environ.get("LAKEHOUSE_PATH", "/home/jovyan/work/lakehouse")
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+_DEFAULT_LAKEHOUSE = os.path.join(_PROJECT_ROOT, "lakehouse")
+
+LAKEHOUSE_BASE = os.environ.get("LAKEHOUSE_PATH", _DEFAULT_LAKEHOUSE)
 KPI_INFRA_PATH = os.path.join(LAKEHOUSE_BASE, "kpis_infra.txt")
-RUTA_GOLD = os.path.join(LAKEHOUSE_BASE, "gold/telemetry_features")
+RUTA_GOLD = os.path.join(LAKEHOUSE_BASE, "gold", "telemetry_features")
 
 # URL del webhook de Discord (NUNCA hardcodear tokens - usar variable de entorno)
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
 def ejecutar_fase(nombre_notebook):
     print(f"⚙️ Ejecutando componente: {nombre_notebook}...")
-    comando = ["jupyter", "nbconvert", "--to", "notebook", "--execute", nombre_notebook, "--inplace"]
+    comando = [sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", nombre_notebook, "--inplace"]
     resultado = subprocess.run(comando, capture_output=True, text=True)
 
     if resultado.returncode == 0:
@@ -85,7 +90,7 @@ if __name__ == "__main__":
     print(f"⏱️ KPI - Latencia Total del Pipeline (PL): {pipeline_latency:.2f} segundos")
 
     try:
-        with open(KPI_INFRA_PATH, "w") as f:
+        with open(KPI_INFRA_PATH, "w", encoding="utf-8") as f:
             f.write(f"latency:{pipeline_latency:.2f}\n")
         print(f"📊 Métrica de latencia persistida en {KPI_INFRA_PATH}")
     except Exception as e:

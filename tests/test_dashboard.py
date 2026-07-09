@@ -28,15 +28,16 @@ class TestDashboard(unittest.TestCase):
             importlib.reload(ad)
             self.assertEqual(ad.ALERT_LOG_PATH, test_log)
 
-    def test_rutas_default_fallback(self):
-        """Verify default paths fall back to Jupyter container paths"""
+    def test_rutas_default_auto_detect(self):
+        """Verify default paths auto-detect based on script location"""
         saved_lakehouse = os.environ.pop("LAKEHOUSE_PATH", None)
         saved_log = os.environ.pop("LOG_FILE_PATH", None)
         try:
             import importlib
             import app_dashboard as ad
             importlib.reload(ad)
-            self.assertIn("/home/jovyan/work/lakehouse", ad.RUTA_BASE)
+            self.assertTrue(os.path.isabs(ad.RUTA_BASE))
+            self.assertIn("lakehouse", ad.RUTA_BASE)
             self.assertIn("alertas.log", ad.ALERT_LOG_PATH)
         finally:
             if saved_lakehouse is not None:

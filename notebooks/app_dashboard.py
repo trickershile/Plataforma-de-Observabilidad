@@ -4,19 +4,24 @@ import streamlit as st
 import plotly.express as px
 from sklearn.metrics import f1_score
 
+# Detección automática de la ruta base del Lakehouse
+# Funciona tanto en Docker (/app/lakehouse) como en local (./lakehouse)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+_DEFAULT_LAKEHOUSE = os.path.join(_PROJECT_ROOT, "lakehouse")
+
+# Configurable vía variable de entorno LAKEHOUSE_PATH (usado en K8s)
+RUTA_BASE = os.environ.get("LAKEHOUSE_PATH", _DEFAULT_LAKEHOUSE)
+RUTA_GOLD = os.path.join(RUTA_BASE, "gold", "telemetry_features")
+KPI_INFRA_PATH = os.path.join(RUTA_BASE, "kpis_infra.txt")
+ALERT_LOG_PATH = os.environ.get("LOG_FILE_PATH", os.path.join(RUTA_BASE, "alertas.log"))
+
 # 1. Configuración de la Página (Debe ser la primera llamada de Streamlit)
 st.set_page_config(
     page_title="POIA-IoT - Panel de Control Global", 
     layout="wide", 
     page_icon="🏭"
 )
-
-# Definición de rutas (configurables vía variable de entorno, con fallback al contenedor Jupyter)
-RUTA_BASE = os.environ.get("LAKEHOUSE_PATH", "/home/jovyan/work/lakehouse")
-RUTA_GOLD = os.path.join(RUTA_BASE, "gold/telemetry_features")
-KPI_INFRA_PATH = os.path.join(RUTA_BASE, "kpis_infra.txt")
-# ALERT_LOG_PATH también es configurable vía LOG_FILE_PATH (usado en K8s deployment)
-ALERT_LOG_PATH = os.environ.get("LOG_FILE_PATH", os.path.join(RUTA_BASE, "alertas.log"))
 
 # Títulos Principales de la Plataforma
 st.title("🏭 Panel de Control Global - POIA-IoT")
@@ -134,7 +139,7 @@ with tab2:
     
     # Consumir el KPI de latencia de extremo a extremo (PL) escrito por el orquestador
     try:
-        with open(KPI_INFRA_PATH, "r") as f:
+        with open(KPI_INFRA_PATH, "r", encoding="utf-8") as f:
             linea = f.readline()
             if "latency:" in linea:
                 latencia = linea.split(":")[1].strip()
@@ -151,7 +156,7 @@ with tab2:
     
     # Consumir el archivo de logs asíncronos escrito por pipeline_silver.ipynb
     try:
-        with open(ALERT_LOG_PATH, "r") as f:
+        with open(ALERT_LOG_PATH, "r", encoding="utf-8") as f:
             alertas = f.readlines()
             if alertas:
                 # Mostrar los últimos 5 eventos críticos registrados de forma cronológica inversa
