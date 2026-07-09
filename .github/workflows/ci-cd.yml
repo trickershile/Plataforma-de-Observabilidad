@@ -2,79 +2,107 @@ name: Plataforma Observabilidad - Data Pipeline CI/CD
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop", "main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-observabilidad-lakehouse
 
 jobs:
+  #1
   data-qa-security:
     name: Validaciones de Datos, Calidad y Seguridad
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Clonar Repositorio
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Configurar Entorno Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
+        cache: 'pip'
 
     - name: Instalar Dependencias
       run: |
         pip install -r requirements.txt
-        pip install pytest flake8
+        pip install pytest pytest-cov flake8
 
-    - name: Ejecutar Análisis de Calidad de Código (Flake8 IE5)
+    - name: Ejecutar Análisis de Calidad de Código (Flake8)
       run: |
-        # Garantiza políticas de cumplimiento antes del despliegue (IE5)
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 notebooks/ --count --max-complexity=10 --max-line-length=120 --exclude=.ipynb_checkpoints --statistics --exit-zero
 
-    - name: Ejecutar Pruebas Unitarias (Pytest IE7)
+    - name: Ejecutar Pruebas Unitarias con Cobertura (Pytest)
       run: |
-        # Batería de pruebas automatizadas para validar estabilidad del código (IE7)
-        python -m pytest tests/ -v --tb=short
+        python -m pytest tests/ -v --tb=short --cov=. --cov-report=xml:coverage.xml
 
-    - name: Escaneo de Vulnerabilidades (Snyk IE6)
-      uses: snyk/actions/python@master
+    - name: Escaneo de Vulnerabilidades (Snyk)
+      uses: snyk/actions/python@v1.0.0
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        command: monitor
+        command: test
+      continue-on-error: false
 
-    - name: Análisis Estático con SonarQube (IE5/IE6)
-      uses: sonarsource/sonarqube-scan-action@master
+    - name: Análisis Estático con SonarQube
+      uses: sonarsource/sonarqube-scan-action@v2.0.2
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-  deploy-lakehouse:
-    name: Despliegue de Infraestructura Cloud Simulada
+        SONAR_HOST_URL: https://sonarcloud.io
+      with:
+        args: >
+          -Dsonar.qualitygate.wait=true
+          -Dsonar.qualitygate.timeout=300
+#2
+  build-and-push:
+    name: Construir y Publicar Imagen Docker
     needs: data-qa-security
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
     - name: Clonar Repositorio
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Autenticar en Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Construir y Publicar Contenedor (Orquestador/Planta IE1)
-      uses: docker/build-push-action@v4
+    - name: Construir y Publicar Contenedor
+      uses: docker/build-push-action@v6
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-observabilidad-lakehouse:latest
+        tags: |
+          ${{ env.DOCKER_IMAGE }}:latest
+          ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
-    - name: Despliegue Automatizado en Kubernetes Clúster (IE2/IE4)
+  #3
+  deploy-lakehouse:
+    name: Despliegue en Kubernetes
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clonar Repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
+
+    - name: Desplegar en Kubernetes
       run: |
-        echo "Aplicando configuraciones de monitoreo y observabilidad para las capas Bronze, Silver y Gold..."
-        echo "Orquestando Pods del Lakehouse y dashboards..."
-        echo "Despliegue finalizado con trazabilidad completa."
+        sed -i "s|image:.*|image: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}|" k8s/deployment.yml
+        kubectl apply -f k8s/deployment.yml
+        kubectl apply -f k8s/istio-telemetry.yml
+        kubectl rollout status deployment/lakehouse-observabilidad-deployment --timeout=300s

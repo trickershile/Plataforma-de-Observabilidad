@@ -12,7 +12,7 @@ class TestDashboard(unittest.TestCase):
     def test_rutas_configurables(self):
         """Verify LAKEHOUSE_PATH env var overrides default path"""
         test_path = "/custom/lakehouse"
-        with patch.dict(os.environ, {"LAKEHOUSE_PATH": test_path}, clear=True):
+        with patch.dict(os.environ, {"LAKEHOUSE_PATH": test_path}, clear=False):
             import importlib
             import app_dashboard as ad
             importlib.reload(ad)
@@ -22,20 +22,28 @@ class TestDashboard(unittest.TestCase):
     def test_alert_log_path_env_var(self):
         """Verify LOG_FILE_PATH env var is used when set"""
         test_log = "/app/alertas.log"
-        with patch.dict(os.environ, {"LOG_FILE_PATH": test_log}, clear=True):
+        with patch.dict(os.environ, {"LOG_FILE_PATH": test_log}, clear=False):
             import importlib
             import app_dashboard as ad
             importlib.reload(ad)
             self.assertEqual(ad.ALERT_LOG_PATH, test_log)
 
-    def test_rutas_default_fallback(self):
-        """Verify default paths fall back to Jupyter container paths"""
-        with patch.dict(os.environ, {}, clear=True):
+    def test_rutas_default_auto_detect(self):
+        """Verify default paths auto-detect based on script location"""
+        saved_lakehouse = os.environ.pop("LAKEHOUSE_PATH", None)
+        saved_log = os.environ.pop("LOG_FILE_PATH", None)
+        try:
             import importlib
             import app_dashboard as ad
             importlib.reload(ad)
-            self.assertIn("/home/jovyan/work/lakehouse", ad.RUTA_BASE)
+            self.assertTrue(os.path.isabs(ad.RUTA_BASE))
+            self.assertIn("lakehouse", ad.RUTA_BASE)
             self.assertIn("alertas.log", ad.ALERT_LOG_PATH)
+        finally:
+            if saved_lakehouse is not None:
+                os.environ["LAKEHOUSE_PATH"] = saved_lakehouse
+            if saved_log is not None:
+                os.environ["LOG_FILE_PATH"] = saved_log
 
     def test_f1_score_calculation(self):
         """Verify F1 score computation with known values"""

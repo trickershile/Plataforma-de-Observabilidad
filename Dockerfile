@@ -1,46 +1,24 @@
-# =============================================================================
-# Dockerfile - Plataforma Inteligente de Observabilidad IoT (POIA-IoT)
-# Basado en python:3.10-slim con Java 11 para soporte PySpark + Delta Lake
-# =============================================================================
+FROM python:3.11-slim
 
-FROM python:3.10-slim
-
-# -----------------------------------------------------------
-# Instalación de Java Runtime (requerido por PySpark)
-# -----------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjdk-11-jre-headless \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 
-# -----------------------------------------------------------
-# Directorio de trabajo
-# -----------------------------------------------------------
 WORKDIR /app
 
-# -----------------------------------------------------------
-# Copia e instalación de dependencias Python
-# -----------------------------------------------------------
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# -----------------------------------------------------------
-# Instalación de PySpark y Delta Lake
-# -----------------------------------------------------------
 RUN pip install --no-cache-dir pyspark delta-spark
 
-# -----------------------------------------------------------
-# Copia completa del código del proyecto
-# -----------------------------------------------------------
-COPY . .
+COPY notebooks/ ./notebooks/
+COPY lakehouse/ ./lakehouse/
 
-# -----------------------------------------------------------
-# Puertos: Streamlit (8501), Spark UI (4040), Jupyter (8888)
-# -----------------------------------------------------------
 EXPOSE 8501 4040 8888
 
-# -----------------------------------------------------------
-# Comando por defecto: orquestador de planta
-# -----------------------------------------------------------
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \ 
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501')" || exit 1
+
 CMD ["python", "notebooks/orquestador_planta.py"]

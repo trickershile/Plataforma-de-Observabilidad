@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
+from subprocess import CompletedProcess
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "notebooks"))
 
@@ -30,12 +31,15 @@ class TestOrquestador(unittest.TestCase):
             self.assertIsNone(result)
             mock_urlopen.assert_not_called()
 
-    def test_ejecutar_fase_notebook_missing(self):
-        """Should return False for non-existent notebook"""
+    @patch("orquestador_planta.subprocess.run")
+    def test_ejecutar_fase_notebook_missing(self, mock_run):
+        """Should return False when notebook execution fails"""
         from orquestador_planta import ejecutar_fase
 
+        mock_run.return_value = CompletedProcess([], 1, b"", b"Execution error")
         result = ejecutar_fase("nonexistent_notebook.ipynb")
         self.assertFalse(result)
+        mock_run.assert_called_once()
 
 
 if __name__ == "__main__":

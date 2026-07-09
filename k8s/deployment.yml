@@ -1,20 +1,12 @@
-# =============================================================================
-# Deployment de Kubernetes - Plataforma Inteligente de Observabilidad IoT
-# Alta disponibilidad (3 réplicas), control estricto de recursos (IE8, IE10)
-# y auto-diagnóstico mediante livenessProbe
-# =============================================================================
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: lakehouse-observabilidad-deployment
-  namespace: default
+  namespace: observabilidad
   labels:
     app: lakehouse-app
 spec:
-  # ---------------------------------------------------------------
-  # Alta disponibilidad: 3 réplicas simultáneas para tolerancia a fallos
-  # y procesamiento industrial ininterrumpido
-  # ---------------------------------------------------------------
   replicas: 3
   selector:
     matchLabels:
@@ -25,21 +17,15 @@ spec:
         app: lakehouse-app
     spec:
       containers:
-        # ---------------------------------------------------------------
-        # Contenedor principal: imagen publicada en Docker Hub
-        # Expone el puerto 8501 para la interfaz Streamlit
-        # ---------------------------------------------------------------
         - name: orquestador-datos
-          image: your-dockerhub-user/poia-iot:latest
+          image: your-dockerhub-user/plataforma-observabilidad-lakehouse:latest
           ports:
             - containerPort: 8501
-
-          # ---------------------------------------------------------------
-          # Gobernanza de Cómputo (IE8, IE10)
-          # Límites estrictos para evitar OOMKilled y acaparamiento de CPU
-          # Limits:  Máximo absoluto que puede consumir el contenedor
-          # Requests: Reserva mínima garantizada por Kubernetes
-          # ---------------------------------------------------------------
+              name: http
+            - containerPort: 4040
+              name: spark-ui
+            - containerPort: 8888
+              name: jupyter
           resources:
             limits:
               cpu: "1000m"
@@ -47,21 +33,18 @@ spec:
             requests:
               cpu: "500m"
               memory: "512Mi"
-
-          # ---------------------------------------------------------------
-          # Variable de entorno para centralizar logs analíticos
-          # LOG_FILE_PATH apunta al archivo de alertas dentro del contenedor
-          # ---------------------------------------------------------------
           env:
             - name: LOG_FILE_PATH
               value: "/app/alertas.log"
-
-          # ---------------------------------------------------------------
-          # Estrategia de Monitoreo de Salud (livenessProbe)
-          # Realiza una petición HTTP GET al puerto 8501 cada 30 segundos
-          # Si falla 3 veces consecutivas, Kubernetes reinicia el Pod
-          # automáticamente, asegurando auto-diagnóstico y resiliencia
-          # ---------------------------------------------------------------
+            - name: LAKEHOUSE_PATH
+              value: "/app/lakehouse"
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /
@@ -69,3 +52,29 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8501
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lakehouse-observabilidad-service
+  namespace: observabilidad
+  labels:
+    app: lakehouse-app
+spec:
+  selector:
+    app: lakehouse-app
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501
+    - name: spark-ui
+      port: 4040
+      targetPort: 4040
+  type: ClusterIP

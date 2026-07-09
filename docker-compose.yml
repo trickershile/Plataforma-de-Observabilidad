@@ -1,25 +1,18 @@
 services:
   spark-lakehouse:
-    image: jupyter/pyspark-notebook:latest
+    build: .
+    image: poia-iot:latest
     container_name: spark_delta_lakehouse
     ports:
-      - "8888:8888"   # Interfaz de Jupyter Lab
-      - "4040:4040"   # Spark UI
-      - "8501:8501"   # Panel de control de Streamlit
+      - "8888:8888"
+      - "4040:4040"
+      - "8501:8501"
     volumes:
-      - ./notebooks:/home/jovyan/work/notebooks
-      - ./lakehouse:/home/jovyan/work/lakehouse
+      - ./notebooks:/app/notebooks
+      - ./lakehouse:/app/lakehouse
     environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - GRANT_SUDO=yes
-      - RESTARTABLE=yes
+      - LAKEHOUSE_PATH=/app/lakehouse
+      - LOG_FILE_PATH=/app/lakehouse/alertas.log
     user: root
-    command: >
-      bash -c "
-      /opt/conda/bin/pip install -r /home/jovyan/work/notebooks/requirements.txt &&
-      . /usr/local/bin/before-notebook.d/spark-config.sh &&
-      cd /home/jovyan/work/notebooks &&
-      nohup /opt/conda/bin/python orquestador_planta.py > /tmp/orquestador.log 2>&1 &
-      /opt/conda/bin/streamlit run app_dashboard.py --server.port 8501 --server.address 0.0.0.0 &
-      exec start-notebook.sh --LabApp.token='' --LabApp.password=''
-      "
+    restart: unless-stopped
+    command: bash /app/notebooks/start.sh

@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─────────────────────────────────────────────
+# Jupyter Notebooks
+# ─────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb~
+
+# ─────────────────────────────────────────────
+# IDE / Editor
+# ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ─────────────────────────────────────────────
+# Datos generados (no deben estar en la imagen)
+# ─────────────────────────────────────────────
+lakehouse/bronze/
+lakehouse/silver/
+lakehouse/gold/
+lakehouse/alertas.log
+lakehouse/kpis_infra.txt
+
+# ─────────────────────────────────────────────
+# Modelos serializados
+# ─────────────────────────────────────────────
+isolation_forest_iot.pkl
+
+# ─────────────────────────────────────────────
+# Git, Entorno, Logs
+# ─────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+.env
+*.log
+/tmp/
+notebooks/.ipynb_checkpoints/
