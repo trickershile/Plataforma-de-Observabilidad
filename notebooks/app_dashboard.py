@@ -357,10 +357,10 @@ with tab1:
             ),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Registros de Auditoria Metrologica</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Registros de Auditoria</div>', unsafe_allow_html=True)
 
         total_ok = len(df) - anomalias_detectadas
         inicio_periodo = df['timestamp'].min().strftime("%Y-%m-%d %H:%M")
@@ -399,7 +399,7 @@ with tab1:
         columnas_mostrar = {
             'timestamp': 'Timestamp',
             'sensor_id': 'Sensor',
-            'temperatura_limpia': 'Temperatura (°C)',
+            'temperatura_limpia': 'Temperatura (C)',
             'vibracion_limpia': 'Vibracion (g)',
             'voltaje': 'Voltaje (V)',
             'temp_promedio_movil': 'Temp. Media Movil',
@@ -424,7 +424,7 @@ with tab1:
 
         st.dataframe(
             df_display.style.apply(color_fila, axis=1),
-            use_container_width=True,
+            width='stretch',
             height=min(60 + len(df_display) * 37, 500)
         )
 
@@ -436,7 +436,7 @@ with tab1:
                 data=csv,
                 file_name="auditoria_poia_iot.csv",
                 mime="text/csv",
-                use_container_width=True,
+                width='stretch',
             )
 
     else:
