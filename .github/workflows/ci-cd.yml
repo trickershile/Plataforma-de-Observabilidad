@@ -38,7 +38,7 @@ jobs:
 
     - name: Ejecutar Pruebas Unitarias con Cobertura (Pytest)
       run: |
-        python -m pytest tests/ -v --tb=short --cov=notebooks --cov-report=xml:coverage.xml
+        python -m pytest tests/ -v --tb=short --cov=. --cov-report=xml:coverage.xml
 
     - name: Escaneo de Vulnerabilidades (Snyk)
       uses: snyk/actions/python@v1.0.0
