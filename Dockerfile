@@ -18,7 +18,7 @@ COPY lakehouse/ ./lakehouse/
 
 EXPOSE 8501 4040 8888
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \ 
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501')" || exit 1
 
 CMD ["python", "notebooks/orquestador_planta.py"]
