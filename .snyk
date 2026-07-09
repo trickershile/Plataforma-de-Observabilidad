@@ -1,8 +1,21 @@
-# Snyk (https://snyk.io) policy file, generated with a custom ignore strategy.
+# Snyk (https://snyk.io) policy file
 version: v1.25.0
 ignore:
   # Ignorar la base de datos local y los logs transitorios del Lakehouse
   'lakehouse/':
     - '*':
         reason: 'Data lakehouse layers and delta logs should not be scanned as source code.'
+        expires: 2030-01-01T00:00:00.000Z
+  SNYK-PYTHON-BLEACH-17356127:
+    - '*':
+        reason: >-
+          ReDoS in bleach@6.4.0. No patch available. Transitive dependency of
+          nbconvert (dev-only, not in production runtime). Medium severity only.
+        expires: 2030-01-01T00:00:00.000Z
+  SNYK-PYTHON-NBCONVERT-17707798:
+    - '*':
+        reason: >-
+          XSS in nbconvert@7.17.1. No patch available. nbconvert is used only
+          for Jupyter notebook execution in the orchestrator, not exposed to
+          user input. Medium severity only.
         expires: 2030-01-01T00:00:00.000Z
